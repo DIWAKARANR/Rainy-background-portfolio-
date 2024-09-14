@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rainContainer = document.getElementById('rain-container');
     const splashScreen = document.querySelector('.splash-screen');
     const content = document.querySelector('.content');
+    const lightning = document.getElementById('lightning');
 
     // Create rain effect
     function createRain() {
@@ -43,19 +44,48 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Lightning effect
-    function createLightning() {
-        const lightning = document.createElement('div');
-        lightning.style.position = 'fixed';
-        lightning.style.top = '0';
-        lightning.style.left = '0';
-        lightning.style.width = '100%';
-        lightning.style.height = '100%';
-        lightning.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
-        lightning.style.opacity = '0';
-        lightning.style.zIndex = '999';
-        lightning.style.pointerEvents = 'none';
-        document.body.appendChild(lightning);
+    // Lightning and thunder effect
+    function createLightningAndThunder() {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function createThunderSound() {
+            const bufferSize = 2 * audioContext.sampleRate;
+            const noiseBuffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+
+            const whiteNoise = audioContext.createBufferSource();
+            whiteNoise.buffer = noiseBuffer;
+
+            const bandpass = audioContext.createBiquadFilter();
+            bandpass.type = 'bandpass';
+            bandpass.frequency.value = 100;
+
+            const lowpass = audioContext.createBiquadFilter();
+            lowpass.type = 'lowpass';
+            lowpass.frequency.value = 1000;
+
+            const highpass = audioContext.createBiquadFilter();
+            highpass.type = 'highpass';
+            highpass.frequency.value = 50;
+
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+
+            whiteNoise.connect(bandpass);
+            bandpass.connect(lowpass);
+            lowpass.connect(highpass);
+            highpass.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            whiteNoise.start();
+            whiteNoise.stop(audioContext.currentTime + 3);
+        }
 
         function flash() {
             lightning.style.opacity = '1';
@@ -70,6 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 lightning.style.opacity = '0';
             }, 150);
+
+            // Play thunder sound with a delay
+            setTimeout(() => {
+                createThunderSound();
+            }, 300);
         }
 
         setInterval(() => {
@@ -81,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize effects and animations
     createRain();
-    createLightning();
+    createLightningAndThunder();
     window.addEventListener('scroll', animateOnScroll);
     splashScreen.addEventListener('click', removeSplashScreen);
 
