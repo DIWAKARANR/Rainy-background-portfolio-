@@ -62,20 +62,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const bandpass = audioContext.createBiquadFilter();
             bandpass.type = 'bandpass';
-            bandpass.frequency.value = 100;
+            bandpass.frequency.value = 80; // Lower frequency for a deeper thunder effect
 
             const lowpass = audioContext.createBiquadFilter();
             lowpass.type = 'lowpass';
-            lowpass.frequency.value = 1000;
+            lowpass.frequency.value = 800; // Lower value for a muffled, heavy thunder effect
 
             const highpass = audioContext.createBiquadFilter();
             highpass.type = 'highpass';
-            highpass.frequency.value = 50;
+            highpass.frequency.value = 40; // Lowering this makes the sound more rumbling
 
             const gainNode = audioContext.createGain();
             gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-            gainNode.gain.linearRampToValueAtTime(1, audioContext.currentTime + 0.01);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+            gainNode.gain.linearRampToValueAtTime(1.5, audioContext.currentTime + 0.01); // Increased gain for louder thunder
+            gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 3); // Maintain sound for longer before fading
 
             whiteNoise.connect(bandpass);
             bandpass.connect(lowpass);
@@ -149,3 +149,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     typeWriter();
 });
+        
